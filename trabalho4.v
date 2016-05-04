@@ -56,67 +56,47 @@ module isintriangule(
 	Area A2(ax, ay, px, py, cx, cy, b2);
 	Area A3(ax, ay, bx, by, px, py, b3);
 
-	if(b1 > 0 && b2 > 0 && b3 > 0)begin
-		assign out = 1;
-	end
-	else begin
-		assign out = 0;
-	end
+
+	assign out = (b1 > 1'b0) && (b2 > 1'b0) && (b3 > 1'b0);
+
 endmodule
 
-module criar;
+module principal;
 
-integer arq_file;
-integer escr_file;
-integer value;
+	integer input_file;
+	integer output_file;
 
-reg signed [11:0] px;
-reg signed [11:0] py;
-reg signed [11:0] ax;
-reg signed [11:0] ay;
-reg signed [11:0] bx;
-reg signed [11:0] by;
-reg signed [11:0] cx;
-reg signed [11:0] cy;
-wire saida;
-reg state = 0;
-isintriangule T(px, py, ax, ay, bx, by, cx, cy, saida);
+	reg [90:0] value;
 
-initial begin
-  arq_file = $fopen("entradas.txt", "r");
-  escr_file = $fopen("saidas_verilog.txt", "w");
-  if (arq_file == 0) begin
-    $display("Arquivo não foi aberto");
-    $finish;
-  end else begin
-    $display("Arquivo foi aberto!");
-  end
-  if (escr_file == 0) begin
-    $display("Arquivo escr não foi aberto");
-    $finish;
-  end else begin
-    $display("Arquivo 2 foi aberto!");
-  end
-end
+	reg [11:0] ax; reg [11:0] ay;
+	reg [11:0] bx; reg [11:0] by;
+	reg [11:0] cx; reg [11:0] cy;
+	reg [11:0] px; reg [11:0] py;
 
-always #2 begin
-  if (!$feof(arq_file)) begin
-	  if (state != 0)begin
+	isintriangule A(px, py, ax, ay, bx, by, cx, cy, out);
 
-	    $fdisplay(escr_file, "%d%d %d %d %d %d %d %d = %d",
-	      px, py, ax, ay, bx, by, cx, cy, saida);
+	integer x; 
+	integer y;
 
-	    value = $fscanf(arq_file, "%d %d %d %d %d %d %d %d\n",
-	      px, py, ax, ay, bx, by, cx, cy);
-	  end else begin
-		value = $fscanf(arq_file, "%d %d %d %d %d %d %d %d\n",
-	      px, py, ax, ay, bx, by, cx, cy);
-		state = 1;
-  	end
-  end
-  else begin
-    $finish;
-  end
-end
+	initial begin
+		input_file  = $fopen("Result.txt", "r");
+		output_file = $fopen("Result_verilog.txt", "w");
+
+		if(input_file == 0) begin
+			$display("Cannot open input_file. Does it exists?");
+			$finish;
+		end
+	end
+
+	always #2 begin
+		if(!$feof(input_file)) begin			
+			value = $fscanf(input_file, "A(%d, %d),  B(%d, %d), C(%d, %d),  P(%d, %d)\n", ax, ay, bx, by, cx, cy, px, py);
+			#1			
+			$fwrite(output_file, "A(%0d, %0d),  B(%0d, %0d), C(%0d, %0d),  P(%0d, %0d) = %0d\n", ax, ay, bx, by, cx, cy, px, py, out);
+		end
+		else begin
+			$finish;
+		end
+	end
 
 endmodule
